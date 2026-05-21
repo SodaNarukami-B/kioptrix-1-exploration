@@ -12,6 +12,7 @@ struct payload_t {
   uint8_t source_name[34];
 } __attribute__((packed));
 
+// FIXME: Names is a [size][name]. Not a [size][name][0x00]
 struct sda_sp *nbios_send_session_req(int sock) {
   struct sda_sp *result = (struct sda_sp *)calloc(1, sizeof(struct sda_sp));
   if (result == NULL) {
@@ -19,6 +20,7 @@ struct sda_sp *nbios_send_session_req(int sock) {
   }
 
   // INFO: Payload setting up
+  // BUG: Invalid size
   uint8_t *buffer = (uint8_t *)calloc(1, 72);
   if (buffer == NULL) {
     result->status = -1;
@@ -32,6 +34,7 @@ struct sda_sp *nbios_send_session_req(int sock) {
   payload->nb_hdr.flag = 0;
   payload->nb_hdr.length = htons(68);
 
+  // BUG: Invalid names structure
   // Server name
   payload->server_name[0] = 0x20;
   memcpy(payload->server_name + 1, NBIOS_WILD_CARD, 32);
@@ -41,6 +44,7 @@ struct sda_sp *nbios_send_session_req(int sock) {
 
   const char *raw_source_name = "SODA";
 
+  // FIXME: Memory leak
   struct sda_sp sp_source_name = nbios_htonb(raw_source_name, 4);
 
   if (sp_source_name.status != 0) {
