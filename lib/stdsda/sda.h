@@ -6,11 +6,11 @@
 
 #pragma pack(push, p1, 1)
 
-struct sda_sp {
+typedef struct {
   uint8_t status;
   size_t size;
   uint8_t *buffer;
-};
+} sda_sp;
 
 #pragma pack(pop, p1)
 

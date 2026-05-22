@@ -1,4 +1,5 @@
 #include "./lib/nbios/nbios.h"
+#include "./lib/smb/smb.h"
 #include "./lib/stdsda/sda.h"
 #include <arpa/inet.h>
 #include <errno.h>
@@ -9,6 +10,7 @@
 #include <sys/socket.h>
 
 int main(int argc, char *argv[]) {
+
   printf("+ Master > status: started\n");
 
   if (argc != 3) {
@@ -19,7 +21,7 @@ int main(int argc, char *argv[]) {
 
   // INFO: Socket & Socket address & Timeouts
 
-  // Socket initialization
+  // INFO: Socket initialization
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock < 0) {
     printf("- Master > err: socket error\n");
@@ -27,7 +29,7 @@ int main(int argc, char *argv[]) {
   }
   printf("+ Master > info: socket created\n");
 
-  // Socket address setting up
+  // INFO: Socket address setting up
   struct sockaddr_in socket_address;
   socket_address.sin_family = AF_INET;
   if (inet_pton(AF_INET, argv[1], &socket_address.sin_addr) < 0) {
@@ -46,7 +48,7 @@ int main(int argc, char *argv[]) {
 
   socket_address.sin_port = htons(port);
 
-  // Timeout setting up
+  // INFO: Timeouts
   struct timeval tv;
   tv.tv_sec = 0;
   tv.tv_usec = 200000;
@@ -62,23 +64,42 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  printf("+ Master > info: socket configurated succesfuly\n");
+  printf("+ Master > info: socket configurated successfuly\n");
 
   if (connect(sock, (struct sockaddr *)&socket_address,
               sizeof(struct sockaddr)) < 0) {
     printf("- Master > err: failed to connect\n");
     return -1;
   }
-  printf("+ Master > info: connected to %s:%s\n", argv[1], argv[2]);
+  printf("+ Master > info: connected to %s:%s\n\n", argv[1], argv[2]);
 
-  struct sda_sp *nbios_session_results = nbios_send_session_req(sock);
+  // INFO: Actions
+
+  // INFO: Step 1: Net Bios session setup
+  sda_sp *nbios_session_results = nbios_send_session_req(sock);
+
   if (nbios_session_results->status != 0) {
-    printf("- Master > err: session denied\n");
+    printf("\n- Master > err: step 1 (nbios session setup) failed\n");
     free(nbios_session_results);
     return -1;
-  } else {
-    printf("+ Master > info: session granted\n");
-    free(nbios_session_results);
-    return 0;
   }
+
+  free(nbios_session_results);
+  printf("\n+ Master > info: step 1 (nbios session setup) complited "
+         "successfuly\n\n");
+
+  // INFO: Step 2: Samba > negtionation
+  sda_sp *smb_negotiation_results = smb_send_negotiation(sock);
+
+  if (smb_negotiation_results->status != 0) {
+    printf("\n- Master > err: step 2 (smb negotiation) failed\n");
+    free(smb_negotiation_results);
+    return -1;
+  }
+
+  free(smb_negotiation_results);
+  printf(
+      "\n+ Master > info: step 2 (smb negotiation) complited successfuly\n\n");
+
+  return 0;
 }

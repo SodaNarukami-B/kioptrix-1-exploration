@@ -25,13 +25,8 @@ struct nbios_header {
 #pragma pack(pop, p1)
 
 // INFO: Functions
-struct sda_sp nbios_htonb(const char *data, size_t data_len);
+sda_sp nbios_htonb(const char *data, size_t data_len);
 
-struct sda_sp *nbios_send_session_req(int sock);
-// Names contatins 2 parameters (in buffer) - [size][server name] and
-// [size][source name].
-// Example: [0x0400 S A M B A 0x0400 S O D A ] (hex)
-// Hint: if buffer[0] byte is '*' (0x2A00 in hex), function
-// sends wild card as server name
+sda_sp *nbios_send_session_req(int sock);
 
 #endif

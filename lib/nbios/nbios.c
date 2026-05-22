@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct sda_sp nbios_htonb(const char *data, size_t data_len) {
-  struct sda_sp result;
+sda_sp nbios_htonb(const char *data, size_t data_len) {
+  sda_sp result;
   result.size = 32;
   result.buffer = (uint8_t *)calloc(1, result.size);
 
