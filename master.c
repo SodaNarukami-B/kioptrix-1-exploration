@@ -50,6 +50,7 @@ int main() {
 
   // INFO: Proccessing
 
+  // Net Bios Session Setup
   if (nbios_session_setup(sock) < 0) {
     printf("\n- Master: nbios session setup failed\n");
 
@@ -59,6 +60,7 @@ int main() {
 
   printf("\n+ Master: nbios session granted\n");
 
+  // Smb Negotiation
   if (smb_negotiation(sock) < 0) {
     printf("\n- Master: negotiation failed\n");
 
@@ -68,6 +70,19 @@ int main() {
 
   printf("\n+ Master: negotiation complited successfuly\n");
 
-  close(sock);
-  return 0;
+  // Smb Session Setup
+  uint16_t user_id = smb_session_setup(sock);
+
+  if (user_id == 65535) {
+    printf("\n- Master: smb session setup failed\n");
+
+    close(sock);
+    return -1;
+  } else {
+
+    printf("\n+ Master: smb session granted (UID: %d)\n", user_id);
+
+    close(sock);
+    return 0;
+  }
 }

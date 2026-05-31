@@ -26,8 +26,23 @@ struct smb_header {
   uint16_t mid;
 };
 
+struct smb_session_setup_and_x {
+  uint8_t andx_command;
+  uint8_t andx_reserved;
+  uint16_t andx_offset;
+  uint16_t max_buffer;
+  uint16_t max_mpx;
+  uint16_t virtual_channel;
+  uint32_t session_key;
+  uint16_t oem_password_len;
+  uint16_t uni_password_len;
+  uint32_t reserved;
+  uint32_t capabilities;
+};
+
 #pragma pack(pop, p1)
 
 int smb_negotiation(int sock);
+uint16_t smb_session_setup(int sock);
 
 #endif
