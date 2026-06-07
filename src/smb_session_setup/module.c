@@ -65,11 +65,15 @@ uint16_t smb_session_setup(int sock) {
 
   printf("+ Smb session: payload created\n");
 
+  // INFO: Sending
   if (send(sock, &payload, sizeof(struct payload_t), 0) < 0) {
     printf("- Smb session: sending failed (timeout error)\n");
     return -1;
   }
 
+  printf("+ Smb session: payload sended\n");
+
+  // INFO: Receiving
   uint8_t *recv_buffer = (uint8_t *)calloc(1, 128);
   int res = recv(sock, recv_buffer, 128, 0);
 

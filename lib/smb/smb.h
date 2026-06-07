@@ -4,8 +4,11 @@
 #define SMB_PROTO "\xffSMB"
 #define SMB_NEGOTIATION 0x72
 #define SMB_SESSION_SETUP 0x73
+#define SMB_TREE_CONNECT 0x75
 
-#define SMB_BASE_DIALECT "\x02NT LM 0.12\x00"
+#define SMB_BASE_DIALECT "\x02NT LM 0.12"
+#define SMB_SERVICE "IPC"
+#define SMB_TREE_PATH "\\\\192.168.1.104\\IPC$"
 
 #include <stdint.h>
 
@@ -40,9 +43,18 @@ struct smb_session_setup_and_x {
   uint32_t capabilities;
 };
 
+struct smb_tree_connect_and_x {
+  uint8_t andx_command;
+  uint8_t andx_reserved;
+  uint16_t andx_offset;
+  uint16_t disconnect_flags;
+  uint16_t password_len;
+};
+
 #pragma pack(pop, p1)
 
 int smb_negotiation(int sock);
 uint16_t smb_session_setup(int sock);
+uint16_t smb_tree_connect(int sock, uint16_t uid);
 
 #endif

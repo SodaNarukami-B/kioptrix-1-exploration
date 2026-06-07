@@ -58,7 +58,7 @@ int main() {
     return -1;
   }
 
-  printf("\n+ Master: nbios session granted\n");
+  printf("\n+ Master: nbios session granted\n\n");
 
   // Smb Negotiation
   if (smb_negotiation(sock) < 0) {
@@ -68,7 +68,7 @@ int main() {
     return -1;
   }
 
-  printf("\n+ Master: negotiation complited successfuly\n");
+  printf("\n+ Master: negotiation complited successfuly\n\n");
 
   // Smb Session Setup
   uint16_t user_id = smb_session_setup(sock);
@@ -78,9 +78,19 @@ int main() {
 
     close(sock);
     return -1;
-  } else {
+  }
+  printf("\n+ Master: smb session granted (UID: %d)\n\n", user_id);
 
-    printf("\n+ Master: smb session granted (UID: %d)\n", user_id);
+  uint16_t tree_id = smb_tree_connect(sock, user_id);
+
+  if (tree_id == 65535) {
+    printf("\n- Master: smb tree connect failed\n");
+
+    close(sock);
+    return -1;
+  } else {
+    printf("\n+ Master: smb tree connect complited successfuly (TID: %d)\n",
+           tree_id);
 
     close(sock);
     return 0;
