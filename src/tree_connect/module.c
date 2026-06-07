@@ -61,7 +61,7 @@ uint16_t smb_tree_connect(int sock, uint16_t uid) {
     return -1;
   }
 
-  printf("- Smb tree: packet sended\n");
+  printf("+ Smb tree: packet sended\n");
 
   // INFO: Receiving response
   uint8_t *recv_buffer = (uint8_t *)calloc(1, 128);
