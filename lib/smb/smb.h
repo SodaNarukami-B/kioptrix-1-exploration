@@ -5,6 +5,7 @@
 #define SMB_NEGOTIATION 0x72
 #define SMB_SESSION_SETUP 0x73
 #define SMB_TREE_CONNECT 0x75
+#define SMB_NT_CREATE 0xA2
 
 #define SMB_BASE_DIALECT "\x02NT LM 0.12"
 #define SMB_SERVICE "IPC"
@@ -51,10 +52,29 @@ struct smb_tree_connect_and_x {
   uint16_t password_len;
 };
 
+struct smb_nt_create_andx {
+  uint8_t andx_command;
+  uint8_t andx_reserved;
+  uint16_t andx_offset;
+  uint8_t reserved;
+  uint16_t name_length;
+  uint32_t flags;
+  uint32_t fid;
+  uint32_t desired_access;
+  uint64_t allocation_size;
+  uint32_t file_attributes;
+  uint32_t share_access;
+  uint32_t create_disposition;
+  uint32_t create_options;
+  uint32_t impersonation_level;
+  uint8_t security_flags;
+};
+
 #pragma pack(pop, p1)
 
 int smb_negotiation(int sock);
 uint16_t smb_session_setup(int sock);
 uint16_t smb_tree_connect(int sock, uint16_t uid);
+uint16_t smb_nt_create(int sock, uint16_t uid, uint16_t tid);
 
 #endif

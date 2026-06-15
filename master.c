@@ -81,6 +81,7 @@ int main() {
   }
   printf("\n+ Master: smb session granted (UID: %d)\n\n", user_id);
 
+  // Tree Connect
   uint16_t tree_id = smb_tree_connect(sock, user_id);
 
   if (tree_id == 65535) {
@@ -88,11 +89,21 @@ int main() {
 
     close(sock);
     return -1;
-  } else {
-    printf("\n+ Master: smb tree connect complited successfuly (TID: %d)\n",
-           tree_id);
+  }
+  printf("\n+ Master: smb tree connect complited successfuly (TID: %d)\n\n",
+         tree_id);
+
+  // NT Create
+  uint16_t file_id = smb_nt_create(sock, user_id, tree_id);
+
+  if (file_id == 65535) {
+    printf("\n- Master: nt create failed\n");
 
     close(sock);
-    return 0;
+    return -1;
   }
+
+  printf("\n+ Master: NT Create complited successfuly (FID: %d)\n\n", file_id);
+  close(sock);
+  return 0;
 }
