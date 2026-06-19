@@ -6,6 +6,7 @@
 #define SMB_SESSION_SETUP 0x73
 #define SMB_TREE_CONNECT 0x75
 #define SMB_NT_CREATE 0xA2
+#define SMB_TRANS2 0x32
 
 #define SMB_BASE_DIALECT "\x02NT LM 0.12"
 #define SMB_SERVICE "IPC"
@@ -70,11 +71,31 @@ struct smb_nt_create_andx {
   uint8_t security_flags;
 };
 
+struct smb_trans2 {
+  uint16_t total_parameter_count;
+  uint16_t total_data_count;
+  uint16_t max_parameter_count;
+  uint16_t max_data_count;
+  uint8_t max_setup_count;
+  uint8_t reserved1;
+  uint16_t flags;
+  uint32_t timeout;
+  uint16_t reserved2;
+  uint16_t parameter_count;
+  uint16_t parameter_offset;
+  uint16_t data_count;
+  uint16_t data_offset;
+  uint8_t setup_count;
+  uint8_t reserved3;
+  uint16_t setup_words;
+};
+
 #pragma pack(pop, p1)
 
 int smb_negotiation(int sock);
 uint16_t smb_session_setup(int sock);
 uint16_t smb_tree_connect(int sock, uint16_t uid);
 uint16_t smb_nt_create(int sock, uint16_t uid, uint16_t tid);
+int smb_trans2open(int sock, uint16_t uid, uint16_t tid);
 
 #endif
