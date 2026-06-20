@@ -73,21 +73,21 @@ struct smb_nt_create_andx {
 
 struct smb_trans2 {
   uint16_t total_parameter_count;
-  uint16_t total_data_count;
+  uint16_t total_data_count; // +
   uint16_t max_parameter_count;
   uint16_t max_data_count;
   uint8_t max_setup_count;
   uint8_t reserved1;
   uint16_t flags;
-  uint32_t timeout;
+  uint64_t timeout;
   uint16_t reserved2;
   uint16_t parameter_count;
-  uint16_t parameter_offset;
-  uint16_t data_count;
-  uint16_t data_offset;
-  uint8_t setup_count;
+  uint16_t parameter_offset; // +
+  uint16_t data_count;       // +
+  uint16_t data_offset;      // +
+  uint8_t setup_count;       // +
   uint8_t reserved3;
-  uint16_t setup_words;
+  uint16_t setup_words; // +
 };
 
 #pragma pack(pop, p1)

@@ -104,6 +104,16 @@ int main() {
   }
 
   printf("\n+ Master: NT Create complited successfuly (FID: %d)\n\n", file_id);
-  close(sock);
+
+  uint8_t trans2_res = smb_trans2open(sock, user_id, tree_id);
+
+  if (trans2_res < 0) {
+    printf("\n- Master: Trans2 failed\n");
+
+    close(sock);
+    return -1;
+  }
+
+  printf("\n+ Master: Trans2 returned 0 (success)\n");
   return 0;
 }
