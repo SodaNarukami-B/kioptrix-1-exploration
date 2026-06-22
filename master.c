@@ -1,14 +1,18 @@
+// Network
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
+// Std
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
+// #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
+// Modules
 #include "./src/nbios_com_session_setup/module_ptr.h"
 #include "./src/smb_com_negotiate/module_ptr.h"
+#include "./src/smb_com_session_setup_andx/module_ptr.h"
 
 // TARGET
 static uint8_t ADDRESS[4] = {0xc0, 0xa8, 0x01, 0x68};
@@ -68,14 +72,23 @@ int main() {
 
   // nbios_com_session_setup
   if (nbios_com_session_setup(sock) < 0) {
-    printf("ERR: nbios session failed\n");
+    printf("ERR: [NBIOS_COM_SESSION_SETUP] - failed\n");
 
     close(sock);
     return -1;
   }
 
   if (smb_com_negotiate(sock) < 0) {
-    printf("ERR: smb negotiation failed\n");
+    printf("ERR: [SMB_COM_NEGOTIATE] - failed\n");
+
+    close(sock);
+    return -1;
+  }
+
+  int user_id = smb_com_session_setup_andx(sock);
+
+  if (user_id < 0) {
+    printf("ERR: [SMB_COM_SESSION_SETUP_ANDX] - failed\n");
 
     close(sock);
     return -1;
