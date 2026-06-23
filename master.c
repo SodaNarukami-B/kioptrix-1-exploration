@@ -13,6 +13,7 @@
 #include "./src/nbios_com_session_setup/module_ptr.h"
 #include "./src/smb_com_negotiate/module_ptr.h"
 #include "./src/smb_com_session_setup_andx/module_ptr.h"
+#include "./src/smb_com_tree_connect_andx/module_ptr.h"
 
 // TARGET
 static uint8_t ADDRESS[4] = {0xc0, 0xa8, 0x01, 0x68};
@@ -85,10 +86,19 @@ int main() {
     return -1;
   }
 
-  int user_id = smb_com_session_setup_andx(sock);
+  short user_id = smb_com_session_setup_andx(sock);
 
   if (user_id < 0) {
     printf("ERR: [SMB_COM_SESSION_SETUP_ANDX] - failed\n");
+
+    close(sock);
+    return -1;
+  }
+
+  short tree_id = smb_com_tree_connect_andx(sock, user_id);
+
+  if (tree_id < 0) {
+    printf("ERR: [SMB_COM_TREE_CONNECT_ANDX] - failed\n");
 
     close(sock);
     return -1;
