@@ -12,6 +12,7 @@
 // Modules
 #include "./src/nbios_com_session_setup/module_ptr.h"
 #include "./src/smb_com_negotiate/module_ptr.h"
+#include "./src/smb_com_nt_create_andx/module_ptr.h"
 #include "./src/smb_com_session_setup_andx/module_ptr.h"
 #include "./src/smb_com_tree_connect_andx/module_ptr.h"
 
@@ -29,7 +30,6 @@ int getsock() {
   if (SOCK < 0) {
     return -1;
   };
-
   struct timeval tv;
   tv.tv_sec = 0;
   tv.tv_usec = 200000;
@@ -99,6 +99,13 @@ int main() {
 
   if (tree_id < 0) {
     printf("ERR: [SMB_COM_TREE_CONNECT_ANDX] - failed\n");
+
+    close(sock);
+    return -1;
+  }
+
+  if (smb_com_nt_create_andx(sock, user_id, tree_id) < 0) {
+    printf("ERR: [SMB_COM_NT_CREATE_ANDX] - failed\n");
 
     close(sock);
     return -1;
