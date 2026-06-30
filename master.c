@@ -26,7 +26,6 @@ static uint16_t CALLBACK_PORT = 4444;
 
 int getsock() {
   const int SOCK = socket(AF_INET, SOCK_STREAM, 0);
-
   if (SOCK < 0) {
     return -1;
   };
@@ -113,3 +112,5 @@ int main() {
 
   return 0;
 };
+
+// TODO: [ ] Rework code to brute force archetecture
