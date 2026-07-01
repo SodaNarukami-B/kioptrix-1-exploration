@@ -3,6 +3,6 @@
 
 #include <stdint.h>
 
-int smb_com_trans2_open2(int sock, uint16_t tid, uint16_t uid);
+int smb_com_trans2_open2(int sock, uint16_t tid, uint16_t uid, uint32_t eip);
 
 #endif

