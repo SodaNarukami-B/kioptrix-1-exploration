@@ -7,12 +7,14 @@
 
 #pragma pack(push, 1)
 
+// RESERVED
 typedef struct {
   uint8_t type;
   uint8_t flags;
   uint16_t len;
 } NBHDR;
 
+// RESERVED
 typedef struct {
   uint8_t protocol[4];
   uint8_t command;
@@ -42,7 +44,7 @@ int nbios_htonb(uint8_t *data, uint8_t *out) {
 int run(int sock) {
   uint8_t nbios_session[72] = "\x81"      // type
                               "\x00"      // flag
-                              "\x00\x04"; // len
+                              "\x00\x44"; // len
   nbios_session[4] = 0x20;
   nbios_session[37] = 0x00;
   nbios_session[38] = 0x20;
@@ -56,4 +58,15 @@ int run(int sock) {
   nbios_htonb(client_name, nbios_session + 39);
 
   for (int i = 0; i < 72; i++) {
-    printf("%02x%s", *(nbios_session + i), ((i + 1) % 16 == 0 || (i + 1) == 72) ? "\n" : " ");
+    printf("\\x%02x%s", *(nbios_session + i), ((i + 1) % 16 == 0 || (i + 1) == 72) ? "\n" : "");
+  };
+
+  return 0;
+};
+
+#ifdef SELF
+int main() {
+  run(1);
+  return 0;
+};
+#endif
