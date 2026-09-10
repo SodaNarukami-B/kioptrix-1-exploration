@@ -41,7 +41,9 @@ int nbios_htonb(uint8_t *data, uint8_t *out) {
   return 0;
 };
 
-int run(int sock) {
+void usage() { printf("Usage: /path/to/binary [packet]\nPakets:\n\t- 1: netbios session setup request\n"); };
+
+void get_nbss_x81() {
   uint8_t nbios_session[72] = "\x81"      // type
                               "\x00"      // flag
                               "\x00\x44"; // len
@@ -57,16 +59,24 @@ int run(int sock) {
 
   nbios_htonb(client_name, nbios_session + 39);
 
+  printf(" --- Netbios Session Setup: Request packet ---\n");
+
   for (int i = 0; i < 72; i++) {
-    printf("\\x%02x%s", *(nbios_session + i), ((i + 1) % 16 == 0 || (i + 1) == 72) ? "\n" : "");
+    printf("\\x%02x%s", *(nbios_session + i), ((i + 1) % 12 == 0 || (i + 1) == 72) ? "\n" : "");
+  };
+};
+
+int main(int argc, char *argv[]) {
+  if (argc != 2) {
+    usage();
+    return -1;
   };
 
-  return 0;
-};
+  if (strcmp(argv[1], "1") == 0) {
+    get_nbss_x81();
+    return 0;
+  };
 
-#ifdef SELF
-int main() {
-  run(1);
+  usage();
   return 0;
 };
-#endif
