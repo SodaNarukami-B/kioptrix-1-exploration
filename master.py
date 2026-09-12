@@ -87,15 +87,69 @@ def main():
 
     # -------------------------- Tree connect --------------------------------
     packet = ( 
-        b"\x00\x00\x00\x45\xffSMB\x75\x00\x00\x00\x00\x18\x00\x00\x00\x00"
-        b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x64\x00"
-        b"\x00\x00\x04\xff\x00\x00\x00\x00\x00\x00\x00\x00\x1a\\\\192.168.1.104\\IPC$\x00"
-        b"IPC$\x00"
+        b"\x00\x00\x00\x46"  # NB
+
+        b"\xffSMB\x75"       # protocol & command
+        b"\x00\x00\x00\x00"  # status
+        b"\x18\x00\x00"      # flag & flag2
+        b"\x00\x00"          # pid high
+        b"\x00\x00\x00\x00\x00\x00\x00\x00" # signature
+        b"\x00\x00"          # reserved
+        b"\x00\x00"          # tid
+        b"\x00\x00"          # pid
+        b"\x64\x00"          # uid
+        b"\x00\x00"          # mid
+
+        b"\x04"              # word count
+        b"\xff\x00\x00\x00"  # andx
+        b"\x00\x00"          # flags
+        b"\x00\x00"          # password len
+
+        b"\x14\x00"          # byte count
+        b"\\\\192.168.1.104\\IPC$\x00"
+        #b"IPC$\x00"        # service
+
     );
 
     send(sock, packet);
-
     time.sleep(0.1);
+
+    # --------------------------- Create andx -------------------------------
+    packet = (
+        b"\x00\x00\x00\x56"   # NB
+
+        b"\xffSMB\xa2"        # protocol & command
+        b"\x00\x00\x00\x00"   # status
+        b"\x18\x00\x00"       # flag & flag2
+        b"\x00\x00"           # pid high
+        b"\x00\x00\x00\x00\x00\x00\x00\x00" # signature
+        b"\x00\x00"           # reserved
+        b"\x01\x00"           # tid
+        b"\x00\x00"           # pid
+        b"\x64\x00"           # uid
+        b"\x00\x00"           # mid
+
+        b"\x18"               # word count
+        b"\xff\x00\x00\x00"   # andx
+        b"\x05\x00"           # name len
+        b"\x00\x00\x00\x00"   # flag
+        b"\x00\x00\x00\x00"   # fid
+        b"\x00\x00\x00\x00"   # desired access
+        b"\x00\x00\x00\x00\x00\x00\x00\x00" # allocation size
+        b"\x00\x00\x00\x00"   # ext attributes
+        b"\x00\x00\x00\x00"   # share access
+        b"\x00\x00\x00\x00"   # create disposition
+        b"\x02\x00\x00\x00"   # create options
+        b"\x02\x00\x00\x00"   # impersonation
+        b"\x00"               # security flag
+
+        b"\x05\x00"
+        b"soda\x00"
+    )
+
+    send(sock, packet);
+    time.sleep(0.1);
+
     return 0;
 
 
